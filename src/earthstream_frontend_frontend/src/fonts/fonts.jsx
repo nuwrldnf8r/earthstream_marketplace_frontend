@@ -1,0 +1,1 @@
+export const lato = '"Lato", sans-serif'

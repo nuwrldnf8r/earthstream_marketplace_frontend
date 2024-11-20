@@ -1,11 +1,12 @@
 import Field from "../components/field"
 import LocationField from "../components/location_field"
-import  useCurrentLocation  from '../lib/use_current_location';
+import  useCurrentLocation  from '../lib/use_current_location'
 import {lato as fontFamily} from "../fonts/fonts"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRocket } from '@fortawesome/free-solid-svg-icons'
-import { useState, useEffect, useRef} from 'react';
-import { ButtonBlue } from "../components/button";
+import { useState, useEffect, useRef} from 'react'
+import { ButtonBlue } from "../components/button"
+import { exists, launchProject } from "../lib/data"
 
 
 
@@ -46,7 +47,20 @@ function ProjectLaunch() {
                 setError(newValidationError)
                 project.current[field] = event.target.value
             }
-        } else {
+        } else if(field==='name'){
+            exists(event.target.value).then((exists)=>{
+                if(exists){
+                    setError({...validationError, [field]: 'Name already exists'})
+                } else {
+                    console.log('name does not exist')
+                    const newValidationError = {...validationError}
+                    delete newValidationError[field]
+                    setError(newValidationError)
+                    project.current[field] = event.target.value
+                }
+            })
+        }
+        else {
             if(event.target.error){
                 setError({...validationError, [field]: event.target.error})
             } else {
@@ -65,9 +79,14 @@ function ProjectLaunch() {
         _setLocation(value)
     }
 
-    const launch = () => {
-        console.log('launching project')
-        console.log(project.current)
+    const launch = async () => {
+        project.current['status'] = 'pending review'
+        let success = await launchProject(project.current)
+        if(success){
+            console.log('project launched')
+        } else {
+            console.log('project not launched')
+        }
     }
 
     const canLaunch = () => {

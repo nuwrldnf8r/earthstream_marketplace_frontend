@@ -19,15 +19,16 @@ function Header(props){
            <div style={{ display: 'flex', flex: '0 1 auto', justifyContent: 'flex-end', fontFamily, fontSize: 16, fontWeight: 600, letterSpacing: '0.1em', color: '#1B1B1B', paddingRight: 20, valign: 'middle'}}>
                 <MenuItem selected={isSelected('sensors')} onClick={(e)=>props.onMenuSelect(e,'sensors')}>SENSORS</MenuItem>
                 <MenuItem selected={isSelected('projects')} onClick={(e)=>props.onMenuSelect(e,'projects')}>PROJECTS</MenuItem>
+                {props.user && props.user.isAdmin && <MenuItem selected={isSelected('admin')} onClick={(e)=>props.onMenuSelect(e,'admin')}>ADMIN</MenuItem>}
                 <Spacer width={50} />
                 {props.signedIn && 
                 <>
                     <div style={{ display: 'flex', alignItems: 'center', marginRight: 20, fontSize: 20, cursor: 'pointer'}} onClick={e=>props.onMenuSelect(e,'account')}><FontAwesomeIcon icon={faUser} /></div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}><ButtonBlack onClick={props.onSignOut}>SIGN IN</ButtonBlack></div>
+                    <div style={{ display: 'flex', alignItems: 'center' }}><ButtonBlack onClick={props.onSignOut}>SIGN OUT</ButtonBlack></div>
                 </>
                 }
                 {!props.signedIn &&
-                    <div style={{ display: 'flex', alignItems: 'center' }}><ButtonBlack  onClick={props.onSignIn}>SIGN OUT</ButtonBlack></div>
+                    <div style={{ display: 'flex', alignItems: 'center' }}><ButtonBlack  onClick={props.onSignIn}>SIGN IN</ButtonBlack></div>
                 }   
             </div>
         </div>

@@ -5,6 +5,8 @@ import Home from './pages/home'
 import Account from './pages/account'
 import Projects from './pages/projects'
 import Sensors from './pages/sensors'
+import Admin from './pages/admin'
+import { isAdmin } from './lib/data'
 
 
 function App() {
@@ -24,7 +26,14 @@ function App() {
 
   function signIn() {
     //TODO - internet identity sign in
-    setUser({id: 'user1'})
+    //check is admin
+    
+    console.log('getting admin status')
+    isAdmin('user1').then((admin) => {
+      setUser({id: 'user1', isAdmin: admin})
+    })
+    
+    setUser({id: 'user1', isAdmin: false})
   }
 
   function signOut() {
@@ -57,6 +66,7 @@ function App() {
       {page === 'account' && <Account signedIn={signedIn()} user={user}/>}
       {page === 'projects' && <Projects signedIn={signedIn()} user={user} selected={projectsSelected} onSelect={projectsSelect}/>}
       {page === 'sensors' && <Sensors signedIn={signedIn()} user={user} selected={sensorsSelected} onSelect={sensorsSelect}/>}
+      {page === 'admin' && <Admin signedIn={signedIn()} user={user}/>}
     </main>
   );
 }

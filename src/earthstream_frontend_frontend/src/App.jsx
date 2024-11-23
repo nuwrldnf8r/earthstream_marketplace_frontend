@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { earthstream_frontend_backend } from 'declarations/earthstream_frontend_backend';
 import Header from './components/header'
 import Home from './pages/home'
@@ -7,6 +7,8 @@ import Projects from './pages/projects'
 import Sensors from './pages/sensors'
 import Admin from './pages/admin'
 import { isAdmin } from './lib/data'
+import { AuthClient } from "@dfinity/auth-client";
+import { icpService } from  './services/icp_service';
 
 
 function App() {
@@ -15,30 +17,67 @@ function App() {
   const [user, setUser] = useState(null);
   const [projectsSelected, setProjectsSelected] = useState('all projects');
   const [sensorsSelected, setSensorsSelected] = useState('pre-sale');
-
-  const signedIn = () => (user!==null);
-
+  const [signedIn, setSignedIn] = useState(false);
+  
+  
   const menuSelected = (event, selected) => {
     event.stopPropagation();
     console.log(selected)
     setPage(selected)
   }
 
-  function signIn() {
-    //TODO - internet identity sign in
-    //check is admin
-    
-    console.log('getting admin status')
-    isAdmin('user1').then((admin) => {
-      setUser({id: 'user1', isAdmin: admin})
-    })
-    
-    setUser({id: 'user1', isAdmin: false})
-  }
+  const handleSignIn = async () => {
+    try {
+      const authClient = await AuthClient.create();
+      const success = await new Promise((resolve) => {
+        authClient.login({
+          identityProvider: "https://identity.ic0.app",
+          onSuccess: () => resolve(true),
+          onError: () => resolve(false),
+        });
+      });
 
-  function signOut() {
-    setUser(null)
-  }
+      if (success) {
+        const identity = authClient.getIdentity();
+        // Update the ICP service with the new identity
+        icpService.updateIdentity(identity);
+        setSignedIn(true);
+        let admin = await isAdmin(identity.getPrincipal().toText());
+        setUser({identity:identity.getPrincipal().toText(), isAdmin: admin});
+        console.log('************************************')
+        console.log({identity:identity.getPrincipal().toText(), isAdmin: admin})
+        console.log('************************************')
+        // Your existing onSignIn logic
+        //props.onSignIn(identity);
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    const authClient = await AuthClient.create();
+    await authClient.logout();
+    // Clear the identity in the service
+    icpService.updateIdentity(null);
+    // Your existing sign out logic
+    setSignedIn(false);
+    setUser(null);
+  };
+
+  // Check if user is already authenticated on component mount
+  useEffect(() => {
+      async function checkAuth() {
+          const authClient = await AuthClient.create();
+          const isAuthenticated = await authClient.isAuthenticated();
+          
+          if (isAuthenticated) {
+              const identity = authClient.getIdentity();
+              handleSignIn(identity);
+          }
+      }
+      checkAuth();
+  }, []);
 
   function projectsSelect(selected) {
     console.log(selected)
@@ -61,12 +100,12 @@ function App() {
 
   return (
     <main>
-      <Header signedIn={signedIn()} user={user} onSignIn={signIn} onSignOut={signOut} onMenuSelect={menuSelected} page={page}/>
+      <Header signedIn={signedIn} user={user} onSignIn={handleSignIn} onSignOut={handleSignOut} onMenuSelect={menuSelected} page={page}/>
       {page === 'home' && <Home />}
-      {page === 'account' && <Account signedIn={signedIn()} user={user}/>}
-      {page === 'projects' && <Projects signedIn={signedIn()} user={user} selected={projectsSelected} onSelect={projectsSelect}/>}
-      {page === 'sensors' && <Sensors signedIn={signedIn()} user={user} selected={sensorsSelected} onSelect={sensorsSelect}/>}
-      {page === 'admin' && <Admin signedIn={signedIn()} user={user}/>}
+      {page === 'account' && <Account signedIn={signedIn} user={user}/>}
+      {page === 'projects' && <Projects signedIn={signedIn} user={user} selected={projectsSelected} onSelect={projectsSelect}/>}
+      {page === 'sensors' && <Sensors signedIn={signedIn} user={user} selected={sensorsSelected} onSelect={sensorsSelect}/>}
+      {page === 'admin' && <Admin signedIn={signedIn} user={user}/>}
     </main>
   );
 }

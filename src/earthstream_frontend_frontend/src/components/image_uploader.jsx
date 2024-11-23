@@ -2,6 +2,10 @@ import React, { useState, useRef, useCallback } from 'react';
 import { X, Upload, Pencil, Trash2, Loader } from 'lucide-react';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { icpService } from '../services/icp_service';
+//import { uploadToICP, fetchFromICP } from '../lib/ic_agent';
+
+
 
 const defaultErrorMessages = {
   fileType: "Invalid file type. Please upload an image.",
@@ -48,17 +52,6 @@ const compressImage = async (file, maxSizeKB = 200) => {
   } while (compressed.size > maxSize && quality > 0.1);
 
   return compressed;
-};
-
-const mockUploadToICP = async (file, hash) => {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve({
-        hash,
-        url: URL.createObjectURL(file)
-      });
-    }, 1000);
-  });
 };
 
 const styles = {
@@ -311,55 +304,53 @@ const styles = {
     
       const handleCropComplete = useCallback(async () => {
         if (!imageRef.current || !crop) return;
-    
+      
         setIsUploading(true);
         setProgress(0);
-        const image = imageRef.current;
-        const canvas = document.createElement('canvas');
         
-        const cropWidthPx = Math.round(crop.width);
-        const cropHeightPx = Math.round(crop.height);
-        const cropXPx = Math.round(crop.x);
-        const cropYPx = Math.round(crop.y);
-    
-        canvas.width = cropWidthPx;
-        canvas.height = cropHeightPx;
-    
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingQuality = 'high';
-    
-        ctx.drawImage(
-          image,
-          cropXPx,
-          cropYPx,
-          cropWidthPx,
-          cropHeightPx,
-          0,
-          0,
-          cropWidthPx,
-          cropHeightPx
-        );
-    
         try {
           const progressInterval = setInterval(() => {
             setProgress(prev => Math.min(prev + 10, 90));
           }, 200);
-    
+      
+          // Create canvas element
+          const canvas = document.createElement('canvas');
+          const cropWidthPx = Math.round(crop.width);
+          const cropHeightPx = Math.round(crop.height);
+          const cropXPx = Math.round(crop.x);
+          const cropYPx = Math.round(crop.y);
+      
+          canvas.width = cropWidthPx;
+          canvas.height = cropHeightPx;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingQuality = 'high';
+          
+          ctx.drawImage(
+            imageRef.current,
+            cropXPx,
+            cropYPx,
+            cropWidthPx,
+            cropHeightPx,
+            0,
+            0,
+            cropWidthPx,
+            cropHeightPx
+          );
+      
           const blob = await new Promise(resolve => 
             canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.9)
           );
-    
+      
           if (imageToEdit) {
-            const originalHash = imageToEdit.hash;
-            console.log('Marking for deletion:', originalHash);
-            
             const newHash = await generateHash(blob);
-            const result = await mockUploadToICP(blob, newHash);
+            const result = await icpService.uploadImage(blob, newHash);
             
             const editedImage = { 
               ...imageToEdit, 
               preview: result.url,
-              hash: newHash,
+              hash: result.hash,
+              fileId: result.fileId,
               status: uploadStatuses.SUCCESS,
               width: cropWidthPx,
               height: cropHeightPx,
@@ -373,34 +364,34 @@ const styles = {
             onUploadComplete(editedImage);
           } else {
             const hash = selectedImage.hash;
-            const result = await mockUploadToICP(blob, hash);
+            //const result = await uploadToICP(blob, hash);
+            const result = await icpService.uploadImage(blob, hash);
+            console.log('Upload result:', result);
             
             const newImage = {
               id: Date.now(),
               preview: result.url,
               hash: result.hash,
+              fileId: result.fileId,
               status: uploadStatuses.SUCCESS,
               width: cropWidthPx,
               height: cropHeightPx,
               aspectRatio: cropWidthPx / cropHeightPx
             };
-    
+      
             if (!multiple) {
-              const oldImages = [...images];
               setImages([newImage]);
-              oldImages.forEach(img => {
-                console.log('Marking for deletion:', img.hash);
-              });
             } else {
               setImages(prev => [...prev, newImage]);
             }
             
             onUploadComplete(result);
           }
-    
+      
           clearInterval(progressInterval);
           setProgress(100);
         } catch (error) {
+          console.error('Upload error:', error);
           setErrors(prev => new Map(prev).set('upload', error.message));
           onUploadError(error);
         } finally {
@@ -414,6 +405,7 @@ const styles = {
           setShowCropModal(false);
         }
       }, [crop, imageToEdit, multiple, selectedImage, images, onUploadComplete, onUploadError, uploadStatuses]);
+    
 
       const handleDrop = useCallback((e) => {
         e.preventDefault();

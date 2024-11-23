@@ -16,6 +16,8 @@
     "src/earthstream_frontend_frontend"
   ],
   "dependencies": {
+    "@dfinity/auth-client": "^2.1.3",
+    "@dfinity/identity": "^2.1.3",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/free-brands-svg-icons": "^6.6.0",
     "@fortawesome/free-regular-svg-icons": "^6.6.0",

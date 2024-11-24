@@ -117,10 +117,10 @@ const ProjectCard = ({
     vote_count = 0
   } = project;
 
+  const [voteCount, setVoteCount] = useState(Number(vote_count));
   const [isHovered, setIsHovered] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
-  const [voteCount, setVoteCount] = useState(Number(vote_count));
   const [shareUrl, setShareUrl] = useState('');
   const [isShareHovered, setIsShareHovered] = useState(false);
   const [isDiscordHovered, setIsDiscordHovered] = useState(false);
@@ -130,7 +130,7 @@ const ProjectCard = ({
       if (isAuthenticated && id) {
         try {
           const principal = await icpService.getCurrentPrincipal();
-          const voted = await icpService.get_user_vote_for_project(id, principal);
+          const voted = await icpService.getUserVoteForProject(id, principal);
           setHasVoted(voted);
         } catch (error) {
           console.error('Failed to check vote status:', error);
@@ -141,21 +141,18 @@ const ProjectCard = ({
     if (id) {
       const baseUrl = window.location.origin;
       setShareUrl(`${baseUrl}?project=${id}`);
+      checkVoteStatus();
     }
-    
-    checkVoteStatus();
   }, [id, isAuthenticated]);
 
   useEffect(() => {
-    // Convert BigInt to Number when updating from props
     setVoteCount(Number(vote_count));
   }, [vote_count]);
 
   const handleVote = async (e) => {
     e.stopPropagation();
     
-    if (!id || !isAuthenticated) return;
-    
+    // Early return if not authenticated or already voting
     if (!isAuthenticated) {
       try {
         await icpService.login();
@@ -165,6 +162,8 @@ const ProjectCard = ({
         return;
       }
     }
+
+    if (!id || isVoting) return;
 
     try {
       setIsVoting(true);
@@ -184,7 +183,7 @@ const ProjectCard = ({
       }
     } catch (error) {
       console.error('Vote operation failed:', error);
-      setVoteCount(Number(vote_count)); // Convert BigInt when resetting on error
+      setVoteCount(Number(vote_count));
       setHasVoted(!hasVoted);
     } finally {
       setIsVoting(false);
@@ -249,13 +248,15 @@ const ProjectCard = ({
         
         <div style={styles.footer}>
           <div style={styles.actions}>
-          <button 
+            <button 
               onClick={handleVote}
               disabled={!isAuthenticated || isVoting}
               style={{
                 ...styles.voteButton,
-                ...(isAuthenticated ? styles.voteButtonActive : styles.voteButtonInactive),
-                ...(hasVoted ? styles.voteButtonVoted : {})
+                ...(!isAuthenticated ? styles.voteButtonInactive : {}),
+                ...(hasVoted ? styles.voteButtonVoted : {}),
+                ...(isAuthenticated ? styles.voteButtonActive : {}),
+                cursor: isAuthenticated ? 'pointer' : 'default'
               }}
             >
               {isVoting ? (

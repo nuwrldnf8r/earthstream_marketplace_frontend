@@ -352,7 +352,20 @@ class ICPService {
   async voteForProject(projectId) {
     const actor = await this.getActor(CANISTER_IDS.PROJECTS, FACTORIES.PROJECTS, true);
     const result = await actor.vote_for_project(projectId);
-    
+    if ('Err' in result) {
+      throw new Error(result.Err);
+    }
+    return result.Ok;
+  }
+
+  async getUserVoteForProject(projectId, principal) {
+    const actor = await this.getActor(CANISTER_IDS.PROJECTS, FACTORIES.PROJECTS, false);
+    return actor.get_user_vote_for_project(projectId, principal);
+  }
+
+  async removeVote(projectId) {
+    const actor = await this.getActor(CANISTER_IDS.PROJECTS, FACTORIES.PROJECTS, true);
+    const result = await actor.remove_vote(projectId);
     if ('Err' in result) {
       throw new Error(result.Err);
     }

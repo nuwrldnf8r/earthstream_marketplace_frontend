@@ -115,18 +115,18 @@ const SensorCard = ({
       </div>
 
       {data.project_id?.length > 0 && (
-        <div style={{ ...infoStyle, display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span>ASSIGNED TO PROJECT</span>
-          <button 
+        <div style={{ ...infoStyle, display: 'flex', alignItems: 'center', gap: '10px' , paddingTop: 15, textAlign: 'center'}}>
+          <span style={{textAlign: 'center', width: '100%'}}>ASSIGNED TO PROJECT</span>
+          {/*          <button 
             style={buttonStyle}
             onClick={() => onProjectClick(data.project_id[0],data.sensor_id)}
           >
             VIEW PROJECT
-          </button>
+          </button> */}
         </div>
       )}
 
-      {Object.keys(data.status)[0] === 'Presale' && (
+      {Object.keys(data.status)[0] === 'Presale' && data.project_id?.length === 0 && (
         <div style={{textAlign: 'center', marginTop: 20}}>
         <button 
           style={shipButtonStyle}

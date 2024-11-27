@@ -62,6 +62,9 @@ function Projects(props){
             {props.selected==='all projects' && <div style={{display: 'block', maxWidth: 800, marginLeft: 'auto', marginRight: 'auto', marginTop: 20}}>
                 <ProjectList fetchFunction="get_projects_by_status" fixedStatus="Approved" onProjectSelect={handleProjectSelect} itemsPerPage={12}/>
             </div>}
+            {props.selected==='my projects' && <div style={{display: 'block', maxWidth: 800, marginLeft: 'auto', marginRight: 'auto', marginTop: 20}}>
+                <ProjectList fetchFunction="get_projects_by_owner" owner={Principal.fromText(props.user.identity)} onProjectSelect={handleProjectSelect} itemsPerPage={12}/>
+            </div>}
         </>}
         
         {selectedProject && <ProjectDisplay 

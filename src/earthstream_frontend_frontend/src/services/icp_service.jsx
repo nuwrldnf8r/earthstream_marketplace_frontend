@@ -126,9 +126,7 @@ class ICPService {
 
     await new Promise((resolve, reject) => {
       this.authClient.login({
-        identityProvider: process.env.NODE_ENV === "production" 
-          ? "https://identity.ic0.app"
-          : "http://localhost:4943?canisterId=rdmx6-jaaaa-aaaaa-aaadq-cai",
+        identityProvider: "https://identity.ic0.app",
         onSuccess: resolve,
         onError: reject
       });

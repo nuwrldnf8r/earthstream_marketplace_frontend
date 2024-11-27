@@ -62,8 +62,8 @@ function Header(props) {
             paddingBottm: 20,
             backgroundColor: '#ffffff'
         }}>
-            <div style={{ flex: '0 1 auto' }}>
-                <img src="/images/logo.webp" alt="earthstream logo" width="180"/>   
+            <div style={{ flex: '0 1 auto', cursor: 'pointer'}}>
+                <img src="/images/logo.webp" alt="earthstream logo" width="180" onClick={()=>window.location.reload()}/>   
             </div>
            
             <div style={{

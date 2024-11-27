@@ -57,7 +57,9 @@ function Header(props) {
             justifyContent: 'space-between', 
             alignItems: 'center', 
             margin: 0, 
-            padding: 8, 
+            padding: 12, 
+            paddingTop: 20,
+            paddingBottm: 20,
             backgroundColor: '#ffffff'
         }}>
             <div style={{ flex: '0 1 auto' }}>

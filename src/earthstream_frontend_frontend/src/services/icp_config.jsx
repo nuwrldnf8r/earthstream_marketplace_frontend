@@ -196,13 +196,159 @@ const idlFactoryProjects = ({ IDL }) => {
   });
 }; 
 
+const idlFactoryPresale = ({ IDL }) => {
+  const TokenType = IDL.Variant({ 'Erc20' : IDL.Null, 'Native' : IDL.Null });
+  const AcceptedToken = IDL.Record({
+    'decimals' : IDL.Nat8,
+    'token_id' : IDL.Text,
+    'chain_id' : IDL.Text,
+    'rpc_url' : IDL.Text,
+    'receive_address' : IDL.Text,
+    'sensor_base_price' : IDL.Nat64,
+    'contract_address' : IDL.Opt(IDL.Text),
+    'token_type' : TokenType,
+    'symbol' : IDL.Text,
+  });
+  const SensorStatus = IDL.Variant({
+    'Presale' : IDL.Null,
+    'Offline' : IDL.Null,
+    'ProcessingForshipping' : IDL.Null,
+    'Shipped' : IDL.Null,
+    'Deployed' : IDL.Null,
+    'Query' : IDL.Null,
+  });
+  const SensorType = IDL.Variant({
+    'Gsm' : IDL.Null,
+    'Lora' : IDL.Null,
+    'GatewayGsm' : IDL.Null,
+    'GatewayWifi' : IDL.Null,
+  });
+  const User = IDL.Record({
+    'user_principal' : IDL.Principal,
+    'address' : IDL.Text,
+    'discord_handle' : IDL.Text,
+  });
+  const AssignType = IDL.Variant({ 'PROJECT' : IDL.Null, 'OWNER' : IDL.Null });
+  const Sensor = IDL.Record({
+    'status' : SensorStatus,
+    'assign_type' : AssignType,
+    'public_key' : IDL.Text,
+    'owner' : IDL.Principal,
+    'sensor_id' : IDL.Text,
+    'sensor_type' : SensorType,
+    'purchase_date' : IDL.Opt(IDL.Nat64),
+    'txhash' : IDL.Text,
+    'project_id' : IDL.Opt(IDL.Text),
+  });
+  return IDL.Service({
+    'add_accepted_token' : IDL.Func(
+        [AcceptedToken],
+        [IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text })],
+        [],
+      ),
+    'add_admin' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text })],
+        [],
+      ),
+    'add_user' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text })],
+        [],
+      ),
+    'count_sensors' : IDL.Func([], [IDL.Nat], ['query']),
+    'create_super_admin' : IDL.Func(
+        [],
+        [IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text })],
+        [],
+      ),
+    'edit_sensor_status' : IDL.Func(
+        [IDL.Text, SensorStatus],
+        [IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text })],
+        [],
+      ),
+    'edit_user' : IDL.Func(
+        [IDL.Principal, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text })],
+        [],
+      ),
+    'get_formatted_price' : IDL.Func(
+        [SensorType, IDL.Text, IDL.Nat64],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        ['query'],
+      ),
+    'get_token' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'Ok' : AcceptedToken, 'Err' : IDL.Text })],
+        ['query'],
+      ),
+    'get_user' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Variant({ 'Ok' : User, 'Err' : IDL.Text })],
+        ['query'],
+      ),
+    'list_accepted_tokens' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Opt(TokenType)],
+        [IDL.Vec(AcceptedToken)],
+        ['query'],
+      ),
+    'list_sensors_by_owner' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(Sensor)],
+        ['query'],
+      ),
+    'list_sensors_by_project' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(Sensor)],
+        ['query'],
+      ),
+    'list_sensors_by_type_and_date' : IDL.Func(
+        [SensorType, IDL.Nat64, IDL.Nat64],
+        [IDL.Vec(Sensor)],
+        ['query'],
+      ),
+    'purchase_sensor' : IDL.Func(
+        [SensorType, IDL.Text, IDL.Text, IDL.Text, IDL.Nat64],
+        [IDL.Variant({ 'Ok' : IDL.Vec(IDL.Text), 'Err' : IDL.Text })],
+        [],
+      ),
+    'remove_accepted_token' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text })],
+        [],
+      ),
+    'remove_admin' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text })],
+        [],
+      ),
+    'remove_sensor_project_id' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text })],
+        [],
+      ),
+    'set_price_ratio' : IDL.Func(
+        [SensorType, IDL.Nat64],
+        [IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text })],
+        [],
+      ),
+    'set_sensor_project_id' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text })],
+        [],
+      ),
+  });
+};
+
+
 export const FACTORIES = {
     IMAGES: idlFactoryImages,
-    PROJECTS: idlFactoryProjects
+    PROJECTS: idlFactoryProjects,
+    PRESALE: idlFactoryPresale
 }
 
 export const CANISTER_IDS = {
-    IMAGES: "gguso-caaaa-aaaak-ao6qa-cai",
-    //PURCHASE: "",
-    PROJECTS: "gusfx-oqaaa-aaaak-ao6ta-cai"
+    IMAGES: 'gguso-caaaa-aaaak-ao6qa-cai',
+    PROJECTS: 'gusfx-oqaaa-aaaak-ao6ta-cai',
+    PRESALE:'frg64-tyaaa-aaaak-ao6yq-cai'
 }

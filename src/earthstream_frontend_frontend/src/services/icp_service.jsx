@@ -697,6 +697,338 @@ async getProjectsByStatus(status, page = 1, limit = 20) {
     };
   }
 
+
+  
+  // Presale Methods
+
+  /**
+   * Adds a new accepted token for payment
+   * @param {Object} tokenData - Token details to add
+   * @returns {Promise<void>} Resolves on success
+   * @throws {Error} If adding the token fails
+   * 
+   * @example
+   * const tokenData = {
+   *   decimals: 18,
+   *   token_id: "ETH",
+   *   chain_id: "1",
+   *   rpc_url: "https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID",
+   *   receive_address: "0xYourWalletAddress",
+   *   sensor_base_price: 1000000000000000000n,
+   *   contract_address: ["0xContractAddress"],
+   *   token_type: { Erc20: null },
+   *   symbol: "ETH"
+   * };
+   * await icpService.addAcceptedToken(tokenData);
+   */
+  async addAcceptedToken(tokenData) {
+    try {
+      const actor = await this.getActor(CANISTER_IDS.PRESALE, FACTORIES.PRESALE, true);
+      const result = await actor.add_accepted_token(tokenData);
+
+      if ('Err' in result) {
+        throw new Error(result.Err);
+      }
+      return result.Ok;
+    } catch (error) {
+      console.error('Add accepted token error:', error);
+      throw new Error('Failed to add accepted token: ' + error.message);
+    }
+  }
+
+  /**
+   * Lists accepted tokens
+   * @param {string} [tokenId] - Optional token ID to filter
+   * @param {Object} [tokenType] - Optional token type filter ({ Erc20: null } or { Native: null })
+   * @returns {Promise<Array>} Array of accepted tokens
+   * 
+   * @example
+   * const tokens = await icpService.listAcceptedTokens();
+   * console.log(tokens);
+   */
+  async listAcceptedTokens(tokenId, tokenType) {
+    try {
+      const actor = await this.getActor(CANISTER_IDS.PRESALE, FACTORIES.PRESALE, false);
+      return await actor.list_accepted_tokens(tokenId ? [tokenId] : [], tokenType ? [tokenType] : []);
+    } catch (error) {
+      console.error('List accepted tokens error:', error);
+      throw new Error('Failed to list accepted tokens: ' + error.message);
+    }
+  }
+
+  /**
+   * Lists sensors owned by a principal
+   * @param {Principal|string} ownerPrincipal - Principal of the sensor owner
+   * @returns {Promise<Array>} Array of sensors owned by the given principal
+   * 
+   * @example
+   * const principal = Principal.fromText("aaaaa-aa");
+   * const sensors = await icpService.listSensorsByOwner(principal);
+   * console.log(sensors);
+   */
+  async listSensorsByOwner(ownerPrincipal) {
+    try {
+      const actor = await this.getActor(CANISTER_IDS.PRESALE, FACTORIES.PRESALE, false);
+      return await actor.list_sensors_by_owner(ownerPrincipal);
+    } catch (error) {
+      console.error('List sensors by owner error:', error);
+      throw new Error('Failed to list sensors by owner: ' + error.message);
+    }
+  }
+
+  /**
+   * Sets the price ratio for a sensor type
+   * @param {Object} sensorType - Sensor type (e.g., { Gsm: null })
+   * @param {bigint} priceRatio - The new price ratio
+   * @returns {Promise<void>} Resolves on success
+   * @throws {Error} If setting the price ratio fails
+   * 
+   * @example
+   * await icpService.setPriceRatio({ Gsm: null }, 1000000000000000000n);
+   */
+  async setPriceRatio(sensorType, priceRatio) {
+    try {
+      const actor = await this.getActor(CANISTER_IDS.PRESALE, FACTORIES.PRESALE, true);
+      const result = await actor.set_price_ratio(sensorType, priceRatio);
+
+      if ('Err' in result) {
+        throw new Error(result.Err);
+      }
+      return result.Ok;
+    } catch (error) {
+      console.error('Set price ratio error:', error);
+      throw new Error('Failed to set price ratio: ' + error.message);
+    }
+  }
+
+  /**
+   * Purchases sensors
+   * @param {Object} sensorType - Sensor type (e.g., { Gsm: null })
+   * @param {string} tokenId - Token ID used for payment
+   * @param {string} txhash - Transaction hash for payment
+   * @param {string} fromAddress - fromwallet address
+   * @param {number} quantity - Number of sensors to purchase
+   * @returns {Promise<Array<string>>} Array of purchased sensor IDs
+   * 
+   * @example
+   * const purchasedSensors = await icpService.purchaseSensor(
+   *   { Gsm: null },
+   *   "ETH",
+   *   "1",
+   *   "0xYourWalletAddress",
+   *   2
+   * );
+   * console.log(purchasedSensors);
+   */
+  async purchaseSensor(sensorType, tokenId, txHash, fromAddress, quantity) {
+    try {
+      const actor = await this.getActor(CANISTER_IDS.PRESALE, FACTORIES.PRESALE, true);
+      const result = await actor.purchase_sensor(sensorType, tokenId, txHash, fromAddress, quantity);
+
+      if ('Err' in result) {
+        throw new Error(result.Err);
+      }
+      return result.Ok;
+    } catch (error) {
+      console.error('Purchase sensor error:', error);
+      throw new Error('Failed to purchase sensor: ' + error.message);
+    }
+  }
+
+  /**
+   * Gets details for a token
+   * @param {string} tokenId - ID of the token to retrieve
+   * @returns {Promise<Object>} Token details
+   * 
+   * @example
+   * const token = await icpService.getToken("ETH");
+   * console.log(token);
+   */
+  async getToken(tokenId) {
+    try {
+      const actor = await this.getActor(CANISTER_IDS.PRESALE, FACTORIES.PRESALE, false);
+      const result = await actor.get_token(tokenId);
+
+      if ('Err' in result) {
+        throw new Error(result.Err);
+      }
+      return result.Ok;
+    } catch (error) {
+      console.error('Get token error:', error);
+      throw new Error('Failed to get token: ' + error.message);
+    }
+  }
+
+  /**
+   * Adds a user
+   * @param {string} address - User's address
+   * @param {string} discordHandle - User's Discord handle
+   * @returns {Promise<void>} Resolves on success
+   * 
+   * @example
+   * await icpService.addUser("0xUserAddress", "user#1234");
+   */
+  async addUser(address, discordHandle) {
+    try {
+      const actor = await this.getActor(CANISTER_IDS.PRESALE, FACTORIES.PRESALE, false);
+      const result = await actor.add_user(address, discordHandle);
+
+      if ('Err' in result) {
+        throw new Error(result.Err);
+      }
+      return result.Ok;
+    } catch (error) {
+      console.error('Add user error:', error);
+      throw new Error('Failed to add user: ' + error.message);
+    }
+  }
+
+  /**
+   * Gets a user's details
+   * @param {Principal|string} userPrincipal - Principal of the user
+   * @returns {Promise<Object>} User details
+   * 
+   * @example
+   * const principal = Principal.fromText("aaaaa-aa");
+   * const user = await icpService.getUser(principal);
+   * console.log(user);
+   */
+  async getUser(userPrincipal) {
+    try {
+      const actor = await this.getActor(CANISTER_IDS.PRESALE, FACTORIES.PRESALE, false);
+      const result = await actor.get_user(userPrincipal);
+
+      if ('Err' in result) {
+        throw new Error(result.Err);
+      }
+      return result.Ok;
+    } catch (error) {
+      console.error('Get user error:', error);
+      throw new Error('Failed to get user: ' + error.message);
+    }
+  }
+
+  /**
+   * Gets the formatted price of sensors
+   * @param {Object} sensorType - Sensor type (e.g., { Gsm: null })
+   * @param {string} tokenId - Token ID used for payment
+   * @param {number} quantity - Number of sensors to price
+   * @returns {Promise<string>} Formatted price
+   * 
+   * @example
+   * const price = await icpService.getFormattedPrice({ Gsm: null }, "ETH", 5);
+   * console.log(price);
+   */
+  async getFormattedPrice(sensorType, tokenId, quantity) {
+    try {
+      const actor = await this.getActor(CANISTER_IDS.PRESALE, FACTORIES.PRESALE, false);
+      const result = await actor.get_formatted_price(sensorType, tokenId, quantity);
+
+      if ('Err' in result) {
+        throw new Error(result.Err);
+      }
+      return result.Ok;
+    } catch (error) {
+      console.error('Get formatted price error:', error);
+      throw new Error('Failed to get formatted price: ' + error.message);
+    }
+  }
+
+  /**
+   * Lists sensors associated with a project
+   * @param {string} projectId - ID of the project
+   * @returns {Promise<Array>} Array of sensors
+   * 
+   * @example
+   * const sensors = await icpService.listSensorsByProject("project-id");
+   * console.log(sensors);
+   */
+  async listSensorsByProject(projectId) {
+    try {
+      const actor = await this.getActor(CANISTER_IDS.PRESALE, FACTORIES.PRESALE, false);
+      return await actor.list_sensors_by_project(projectId);
+    } catch (error) {
+      console.error('List sensors by project error:', error);
+      throw new Error('Failed to list sensors by project: ' + error.message);
+    }
+  }
+
+  /**
+   * Removes a sensor's project ID
+   * @param {string} sensorId - ID of the sensor to update
+   * @returns {Promise<void>} Resolves on success
+   * 
+   * @example
+   * await icpService.removeSensorProjectIds("sensor-id");
+   */
+  async removeSensorProjectIds(sensorId) {
+    try {
+      const actor = await this.getActor(CANISTER_IDS.PRESALE, FACTORIES.PRESALE, true);
+      const result = await actor.remove_sensor_project_id(sensorId);
+
+      if ('Err' in result) {
+        throw new Error(result.Err);
+      }
+      return result.Ok;
+    } catch (error) {
+      console.error('Remove sensor project ID error:', error);
+      throw new Error('Failed to remove sensor project ID: ' + error.message);
+    }
+  }
+
+  /**
+   * Sets a sensor's project ID
+   * @param {string} sensorId - ID of the sensor to update
+   * @param {string} projectId - ID of the project to associate with the sensor
+   * @returns {Promise<void>} Resolves on success
+   * @throws {Error} If setting the sensor project ID fails
+   * 
+   * @example
+   * await icpService.setSensorProjectId("sensor-id", "project-id");
+   */
+  async setSensorProjectId(sensorId, projectId) {
+    try {
+      const actor = await this.getActor(CANISTER_IDS.PRESALE, FACTORIES.PRESALE, true);
+      const result = await actor.set_sensor_project_id(sensorId, projectId);
+
+      if ('Err' in result) {
+        throw new Error(result.Err);
+      }
+      return result.Ok;
+    } catch (error) {
+      console.error('Set sensor project ID error:', error);
+      throw new Error('Failed to set sensor project ID: ' + error.message);
+    }
+  }
+
+  /**
+   * Updates the status of a sensor
+   * @param {string} sensorId - ID of the sensor to update
+   * @param {Object} status - New status for the sensor (e.g., { Deployed: null })
+   * @returns {Promise<void>} Resolves on success
+   * @throws {Error} If updating the sensor status fails
+   * 
+   * @example
+   * await icpService.editSensorStatus("sensor123", { Deployed: null });
+   */
+  async editSensorStatus(sensorId, status) {
+    try {
+      const actor = await this.getActor(CANISTER_IDS.PRESALE, FACTORIES.PRESALE, true);
+      const result = await actor.edit_sensor_status(sensorId, status);
+
+      if ('Err' in result) {
+        throw new Error(result.Err);
+      }
+      return result.Ok;
+    } catch (error) {
+      console.error('Edit sensor status error:', error);
+      throw new Error('Failed to edit sensor status: ' + error.message);
+    }
+  }
+
+
+
+
 }
 
 

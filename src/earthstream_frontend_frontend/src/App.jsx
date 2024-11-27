@@ -89,6 +89,15 @@ function App() {
     setSensorsSelected(selected)
   }
 
+  function adminSelect(selected) {
+
+  }
+
+  const updateProjects = async () => {
+    let projects = await icpService.listProjects();
+    setProjects(projects);
+  }
+
   function handleSubmit(event) {
     event.preventDefault();
     const name = event.target.elements.name.value;
@@ -103,7 +112,7 @@ function App() {
       <Header signedIn={signedIn} user={user} onSignIn={handleSignIn} onSignOut={handleSignOut} onMenuSelect={menuSelected} page={page}/>
       {page === 'home' && <Home />}
       {page === 'account' && <Account signedIn={signedIn} user={user}/>}
-      {page === 'projects' && <Projects signedIn={signedIn} user={user} selected={projectsSelected} onSelect={projectsSelect}/>}
+      {page === 'projects' && <Projects signedIn={signedIn} user={user} selected={projectsSelected} onSelect={projectsSelect} updateProjects={updateProjects}/>}
       {page === 'sensors' && <Sensors signedIn={signedIn} user={user} selected={sensorsSelected} onSelect={sensorsSelect}/>}
       {page === 'admin' && <Admin signedIn={signedIn} user={user}/>}
     </main>

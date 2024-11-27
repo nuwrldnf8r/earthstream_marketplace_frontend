@@ -229,7 +229,7 @@ const ProjectCard = ({
         ...(isHovered ? styles.cardHover : {}),
         ...style
       }}
-      onClick={() => onProjectSelect(id)}
+      onClick={() => onProjectSelect(project)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
